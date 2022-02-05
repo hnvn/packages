@@ -8,6 +8,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown/src/_gesture_recognizer.dart';
 import 'package:markdown/markdown.dart' as md;
 
 import '_functions_io.dart' if (dart.library.html) '_functions_web.dart';
@@ -154,6 +155,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.styleSheetTheme = MarkdownStyleSheetBaseTheme.material,
     this.syntaxHighlighter,
     this.onTapLink,
+    this.onLongPressLink,
     this.onTapText,
     this.imageDirectory,
     this.blockSyntaxes,
@@ -195,6 +197,9 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// Called when the user taps a link.
   final MarkdownTapLinkCallback? onTapLink;
+
+  /// Called when the user long press a link.
+  final MarkdownTapLinkCallback? onLongPressLink;
 
   /// Default tap handler used when [selectable] is set to true
   final VoidCallback? onTapText;
@@ -354,12 +359,18 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
-    final TapGestureRecognizer recognizer = TapGestureRecognizer()
-      ..onTap = () {
-        if (widget.onTapLink != null) {
-          widget.onTapLink!(text, href, title);
-        }
-      };
+    final TapAndLongPressGestureRecognizer recognizer =
+        TapAndLongPressGestureRecognizer()
+          ..onTap = () {
+            if (widget.onTapLink != null) {
+              widget.onTapLink!(text, href, title);
+            }
+          }
+          ..onLongPress = () {
+            if (widget.onLongPressLink != null) {
+              widget.onLongPressLink!(text, href, title);
+            }
+          };
     _recognizers.add(recognizer);
     return recognizer;
   }
@@ -396,6 +407,7 @@ class MarkdownBody extends MarkdownWidget {
     MarkdownStyleSheetBaseTheme? styleSheetTheme,
     SyntaxHighlighter? syntaxHighlighter,
     MarkdownTapLinkCallback? onTapLink,
+    MarkdownTapLinkCallback? onLongPressLink,
     VoidCallback? onTapText,
     String? imageDirectory,
     List<md.BlockSyntax>? blockSyntaxes,
@@ -421,6 +433,7 @@ class MarkdownBody extends MarkdownWidget {
           styleSheetTheme: styleSheetTheme,
           syntaxHighlighter: syntaxHighlighter,
           onTapLink: onTapLink,
+          onLongPressLink: onLongPressLink,
           onTapText: onTapText,
           imageDirectory: imageDirectory,
           blockSyntaxes: blockSyntaxes,
